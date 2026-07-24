@@ -1,0 +1,246 @@
+/* ==========================================================================
+   AURALAB - Interactive Lab Floor Map & PC Status Cards
+   ========================================================================== */
+
+.floor-map-wrapper {
+  background: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 1.75rem;
+  min-height: 600px;
+  position: relative;
+}
+
+/* Floor Grid Layout */
+.floor-map-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.5rem;
+}
+
+.zone-divider {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+}
+
+.zone-divider-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-accent-cyan);
+}
+
+/* PC Card Component */
+.pc-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.pc-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--card-accent-color, var(--color-healthy));
+  transition: background 0.3s ease;
+}
+
+.pc-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.7), 0 0 15px var(--card-glow-color, var(--color-healthy-glow));
+}
+
+/* PC Card Header */
+.pc-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.pc-name-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.pc-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.host-badge-tiny {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.pc-gpu-spec {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  margin-top: 0.15rem;
+}
+
+.pc-health-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pc-card.status-healthy .pc-health-badge {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--color-healthy);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.pc-card.status-moderate .pc-health-badge {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--color-moderate);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.pc-card.status-heavy .pc-health-badge {
+  background: rgba(249, 115, 22, 0.12);
+  color: var(--color-heavy);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.pc-card.status-critical .pc-health-badge {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--color-critical);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  animation: flash-border 1.5s infinite alternate;
+}
+
+@keyframes flash-border {
+  0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.3); }
+  100% { box-shadow: 0 0 18px rgba(239, 68, 68, 0.8); }
+}
+
+.pc-card.status-offline .pc-health-badge {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--color-offline);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+/* AI Recommendation Ratings Bar on PC Card */
+.pc-rec-ratings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 0.85rem;
+  font-size: 0.75rem;
+}
+
+.rec-rating-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.rec-rating-item strong {
+  font-family: var(--font-mono);
+  color: var(--color-accent-cyan);
+}
+
+/* Telemetry Mini Grid */
+.pc-metrics-mini {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.85rem;
+}
+
+.metric-box-mini {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+}
+
+.metric-title-mini {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mini-bar-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.mini-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* Card Footer */
+.pc-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.65rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.click-hint {
+  color: var(--color-accent-blue);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.score-pill {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+}

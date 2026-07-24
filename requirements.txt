@@ -1,0 +1,5 @@
+
+starlette
+uvicorn[standard]
+websockets
+wsproto

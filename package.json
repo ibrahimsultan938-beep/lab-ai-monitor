@@ -1,0 +1,21 @@
+{
+  "name": "lab-ai-monitor",
+  "version": "1.0.0",
+  "description": "Interactive Lab Floor Map & Real-Time AI GPU Monitoring System for Hackathons",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "systeminformation": "^5.22.6",
+    "ws": "^8.17.0"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}

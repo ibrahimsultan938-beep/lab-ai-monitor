@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraLab AI Command Center | GPU Cluster Monitoring & Optimization</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/floor_map.css">
+  <link rel="stylesheet" href="/static/css/modal.css">
+  <link rel="stylesheet" href="/static/css/notifications.css">
+  <link rel="stylesheet" href="/static/css/analytics.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-logo">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">
+          <span class="brand-name">AURA<span class="highlight">LAB</span></span>
+          <span class="brand-sub">AI GPU Cluster Monitor</span>
+        </div>
+      </div>
+      
+      <!-- Live Header Status Section -->
+      <div class="live-status-container">
+        <div class="live-status-pill">
+          <span class="pulse-dot"></span>
+          <span id="ws-status-text">WS Connected</span>
+        </div>
+
+        <div class="live-metrics-bar">
+          <span class="live-item">🕒 <span id="header-clock">--:--:--</span></span>
+          <span class="live-item agent">🤖 Agent: <span style="color:var(--color-healthy);">Active</span></span>
+          <span class="live-item backend">⚙️ Backend: <span style="color:var(--color-healthy);">Online</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quickbar Stats -->
+    <div class="header-stats">
+      <div class="stat-badge">
+        <span class="stat-label">Total Nodes</span>
+        <span class="stat-value" id="stat-total-pcs">16</span>
+      </div>
+      <div class="stat-badge healthy">
+        <span class="stat-label">Healthy</span>
+        <span class="stat-value" id="stat-healthy-pcs">--</span>
+      </div>
+      <div class="stat-badge moderate">
+        <span class="stat-label">Moderate</span>
+        <span class="stat-value" id="stat-moderate-pcs">--</span>
+      </div>
+      <div class="stat-badge heavy">
+        <span class="stat-label">Heavy</span>
+        <span class="stat-value" id="stat-heavy-pcs">--</span>
+      </div>
+      <div class="stat-badge critical">
+        <span class="stat-label">Critical</span>
+        <span class="stat-value" id="stat-critical-pcs">--</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- One-Click Best GPU Finder Button -->
+      <button id="btn-open-finder" class="btn-primary-finder">
+        <span class="btn-icon">🚀</span>
+        <span class="btn-text">Find Best PC for AI Training</span>
+      </button>
+
+      <!-- SAFE DEMO MODE Button -->
+      <button id="btn-demo-mode" class="btn-demo-safe" title="Simulates high-load alert scenario in software (Zero host hardware strain)">
+        <span class="btn-icon">🛡️</span>
+        <span id="demo-btn-text">Safe Demo Mode</span>
+      </button>
+
+      <!-- Admin Panel Button -->
+      <button id="btn-open-admin" class="btn-admin" title="Cluster Admin Panel">
+        <span class="btn-icon">⚙️</span>
+        <span class="btn-text">Admin Panel</span>
+      </button>
+
+      <!-- Notification Bell -->
+      <button id="btn-toggle-notifs" class="btn-notif-bell">
+        <span class="bell-icon">🔔</span>
+        <span id="notif-badge-count" class="bell-badge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="main-container">
+    
+    <!-- Controls, Search & Legend Bar -->
+    <section class="controls-bar">
+      
+      <!-- Live Search Box -->
+      <div class="search-box">
+        <input type="text" id="pc-search-input" placeholder="🔍 Search PC name, GPU model, status..." class="search-input">
+      </div>
+
+      <div class="zone-filters">
+        <span class="filter-title">Zone:</span>
+        <button class="zone-btn active" data-zone="all">All Zones</button>
+        <button class="zone-btn" data-zone="Zone A (Training Cluster)">Zone A (Training)</button>
+        <button class="zone-btn" data-zone="Zone B (Inference Racks)">Zone B (Inference)</button>
+        <button class="zone-btn" data-zone="Zone C (Student Workstations)">Zone C (Workstations)</button>
+        <button class="zone-btn" data-zone="Zone D (Edge AI Nodes)">Zone D (Edge Nodes)</button>
+      </div>
+
+      <!-- Health Color Legend -->
+      <div class="health-legend">
+        <span class="legend-title">Health:</span>
+        <span class="legend-item"><span class="dot green"></span> 🟢 Healthy</span>
+        <span class="legend-item"><span class="dot yellow"></span> 🟡 Moderate</span>
+        <span class="legend-item"><span class="dot orange"></span> 🟠 Heavy</span>
+        <span class="legend-item"><span class="dot red"></span> 🔴 Critical</span>
+        <span class="legend-item"><span class="dot offline"></span> ⚫ Offline</span>
+      </div>
+
+      <!-- Report Export Actions -->
+      <div class="report-actions">
+        <a href="/api/reports/csv" class="btn-report-export" download>📥 Export CSV</a>
+        <a href="/api/reports/pdf" target="_blank" class="btn-report-export pdf">📄 Printable PDF</a>
+      </div>
+
+      <!-- View Switcher -->
+      <div class="view-toggle">
+        <button id="view-map" class="toggle-btn active">🗺️ Floor Map</button>
+        <button id="view-grid" class="toggle-btn">🔲 Grid View</button>
+      </div>
+    </section>
+
+    <!-- Visual Interactive Lab Floor Map Container -->
+    <section id="floor-map-wrapper" class="floor-map-wrapper">
+      <div class="floor-map-grid" id="floor-map-grid">
+        <!-- Rendered PC Cards inserted here -->
+      </div>
+    </section>
+
+    <!-- Historical Telemetry Analytics & Trends Panel -->
+    <section class="analytics-section">
+      <div class="analytics-header">
+        <div class="analytics-title-group">
+          <h2>📊 Historical Telemetry & System Analytics</h2>
+          <p class="analytics-subtitle">Track hardware workload trends, peak GPU utilization, and cluster resource distribution over time.</p>
+        </div>
+
+        <div class="timeframe-toggle">
+          <button class="time-btn active" data-timeframe="hour">Last Hour</button>
+          <button class="time-btn" data-timeframe="day">Last 24 Hours</button>
+          <button class="time-btn" data-timeframe="week">Last 7 Days</button>
+        </div>
+      </div>
+
+      <!-- Analytics Metrics Summary Cards Grid -->
+      <div class="analytics-cards-grid">
+        <!-- AI Engine KPI Card -->
+        <div class="analytics-card ai-kpi-card">
+          <div class="ai-kpi-title">🤖 AI Recommendation Engine</div>
+          <div class="ai-kpi-status"><span class="pulse-dot"></span> Status: <strong style="color:var(--color-healthy);">Active</strong></div>
+          <div class="ai-kpi-row">
+            <span>Avg Rec Score: <strong id="an-avg-rec" style="color:var(--color-accent-cyan);">94/100</strong></span>
+            <span>Avg Confidence: <strong id="an-avg-conf" style="color:var(--color-accent-purple);">96%</strong></span>
+          </div>
+        </div>
+
+        <div class="analytics-card">
+          <span class="an-label">Average GPU Usage</span>
+          <span class="an-value" id="an-avg-gpu">--%</span>
+          <span class="an-sub">Cluster aggregate</span>
+        </div>
+
+        <div class="analytics-card highlight-peak">
+          <span class="an-label">Peak GPU Usage</span>
+          <span class="an-value" id="an-peak-gpu">--%</span>
+          <span class="an-sub">Maximum recorded load</span>
+        </div>
+
+        <div class="analytics-card">
+          <span class="an-label">Average CPU Usage</span>
+          <span class="an-value" id="an-avg-cpu">--%</span>
+          <span class="an-sub">CPU Core load</span>
+        </div>
+
+        <div class="analytics-card">
+          <span class="an-label">Average GPU Temp</span>
+          <span class="an-value" id="an-avg-temp">--°C</span>
+          <span class="an-sub">Thermal average</span>
+        </div>
+
+        <div class="analytics-card">
+          <span class="an-label">Average RAM Usage</span>
+          <span class="an-value" id="an-avg-ram">--%</span>
+          <span class="an-sub">Memory capacity load</span>
+        </div>
+
+        <div class="analytics-card">
+          <span class="an-label">Average Health Score</span>
+          <span class="an-value" id="an-avg-health" style="color:var(--color-healthy);">--/100</span>
+          <span class="an-sub">Overall health rating</span>
+        </div>
+
+        <div class="analytics-card">
+          <span class="an-label">Total Active Alerts</span>
+          <span class="an-value" id="an-total-alerts" style="color:var(--color-critical);">--</span>
+          <span class="an-sub">Triggered incidents</span>
+        </div>
+
+        <div class="analytics-card active-pc">
+          <span class="an-label">🔥 Most Active PC</span>
+          <span class="an-value" id="an-most-active">--</span>
+          <span class="an-sub">Highest avg workload</span>
+        </div>
+
+        <div class="analytics-card quiet-pc">
+          <span class="an-label">💤 Least Active PC</span>
+          <span class="an-value" id="an-least-active">--</span>
+          <span class="an-sub">Ideal candidate for new jobs</span>
+        </div>
+      </div>
+
+      <!-- Trend Charts Grid -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">📈 CPU & GPU Load Trend (%)</div>
+          <div id="chart-gpu-svg-container" class="chart-svg-box">
+            <!-- Rendered SVG Line Chart -->
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">🌡️ GPU Temperature & RAM Trend</div>
+          <div id="chart-temp-svg-container" class="chart-svg-box">
+            <!-- Rendered SVG Line Chart -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Professional Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-left">
+        <span class="footer-brand">⚡ AuraLab AI Optimization Platform</span>
+        <span class="footer-sub">Real-Time Cluster Telemetry & AI Resource Allocation</span>
+      </div>
+      <div class="footer-center">
+        <span>Developed by <strong>Team DIU_Elite_Noobs</strong></span>
+        <span>Daffodil International University</span>
+      </div>
+      <div class="footer-right">
+        <span class="badge-hackathon">🏆 AI Innovation Hackathon 2026</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL 1: Top 5 Best GPU Finder Modal -->
+  <div id="modal-gpu-finder" class="modal-backdrop hidden">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2>🚀 Top 5 Recommended PCs for AI Training</h2>
+          <p class="modal-subtitle">AI Recommendation Engine evaluated live VRAM, GPU usage, thermal headroom, and workload stability.</p>
+        </div>
+        <button class="btn-close-modal" id="btn-close-finder">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="finder-loading" class="finder-spinner hidden">
+          <div class="spinner"></div>
+          <p>Evaluating cluster telemetry & computing weighted AI recommendation scores...</p>
+        </div>
+
+        <div id="finder-recommendations-list" class="recommendations-container">
+          <!-- Top 5 Recommendations inserted dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: PC Telemetry Inspector Modal -->
+  <div id="modal-pc-inspector" class="modal-backdrop hidden">
+    <div class="modal-content modal-xl">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="pc-header-badge">
+            <h2 id="inspector-pc-name">PC-01 (Host Master)</h2>
+            <span id="inspector-status-badge" class="badge-status">🟢 Healthy</span>
+            <span id="inspector-host-tag" class="host-pill hidden">🔥 REAL HOST HARDWARE</span>
+          </div>
+          <p id="inspector-location-text" class="modal-subtitle">Zone A (Training Cluster) • Row 1 - Rack 01</p>
+        </div>
+        <button class="btn-close-modal" id="btn-close-inspector">&times;</button>
+      </div>
+
+      <div class="modal-body inspector-grid">
+        <div class="inspector-col-left">
+          <div class="card-summary">
+            <div class="score-box health">
+              <span class="score-val" id="inspector-health-score">--</span>
+              <span class="score-lbl">AI Health Score</span>
+            </div>
+            <div class="score-box rec">
+              <span class="score-val" id="inspector-vram-avail">-- GB</span>
+              <span class="score-lbl">Free VRAM</span>
+            </div>
+          </div>
+
+          <div class="smart-explanation-box">
+            <div class="ai-box-title">
+              <span class="ai-icon">🤖</span>
+              <span>Smart AI Diagnosis</span>
+            </div>
+            <p id="inspector-smart-explanation" class="ai-text">Analyzing machine state...</p>
+          </div>
+
+          <div class="gauges-grid">
+            <div class="gauge-card">
+              <div class="gauge-header">
+                <span class="gauge-label">GPU Usage</span>
+                <span class="gauge-val" id="gauge-gpu-val">--%</span>
+              </div>
+              <div class="progress-track">
+                <div id="progress-gpu-fill" class="progress-fill fill-green" style="width: 0%;"></div>
+              </div>
+              <span id="inspector-gpu-model" class="gauge-sub">NVIDIA RTX 4050</span>
+            </div>
+
+            <div class="gauge-card">
+              <div class="gauge-header">
+                <span class="gauge-label">GPU Temp</span>
+                <span class="gauge-val" id="gauge-temp-val">--°C</span>
+              </div>
+              <div class="progress-track">
+                <div id="progress-temp-fill" class="progress-fill fill-green" style="width: 0%;"></div>
+              </div>
+              <span class="gauge-sub">Thermal Limit: 85°C</span>
+            </div>
+
+            <div class="gauge-card">
+              <div class="gauge-header">
+                <span class="gauge-label">VRAM Usage</span>
+                <span class="gauge-val" id="gauge-vram-val">-- / -- GB</span>
+              </div>
+              <div class="progress-track">
+                <div id="progress-vram-fill" class="progress-fill fill-green" style="width: 0%;"></div>
+              </div>
+              <span id="gauge-vram-pct" class="gauge-sub">--% Capacity</span>
+            </div>
+
+            <div class="gauge-card">
+              <div class="gauge-header">
+                <span class="gauge-label">CPU Usage</span>
+                <span class="gauge-val" id="gauge-cpu-val">--%</span>
+              </div>
+              <div class="progress-track">
+                <div id="progress-cpu-fill" class="progress-fill fill-green" style="width: 0%;"></div>
+              </div>
+              <span class="gauge-sub">Host CPU Core Load</span>
+            </div>
+
+            <div class="gauge-card">
+              <div class="gauge-header">
+                <span class="gauge-label">RAM Usage</span>
+                <span class="gauge-val" id="gauge-ram-val">-- / -- GB</span>
+              </div>
+              <div class="progress-track">
+                <div id="progress-ram-fill" class="progress-fill fill-green" style="width: 0%;"></div>
+              </div>
+              <span id="gauge-ram-pct" class="gauge-sub">--% Capacity</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="inspector-col-right">
+          <div class="panel-section">
+            <div class="section-title">
+              <span>⚡ Active Processes</span>
+              <span class="update-pulse">Live <span id="inspector-last-updated">--:--:--</span></span>
+            </div>
+
+            <div class="process-table-wrapper">
+              <table class="process-table">
+                <thead>
+                  <tr>
+                    <th>PID</th>
+                    <th>Process Name</th>
+                    <th>Memory</th>
+                    <th>CPU %</th>
+                  </tr>
+                </thead>
+                <tbody id="inspector-process-rows">
+                  <!-- Process rows inserted dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel-section actions-section">
+            <div class="section-title">
+              <span>🛠️ Node Management Actions</span>
+            </div>
+            <div class="action-buttons-row">
+              <button class="btn-node-action" onclick="alert('Sent SIGTERM signal to high-load processes.')">
+                <span>🛑 Terminate Heavy Job</span>
+              </button>
+              <button class="btn-node-action warning" onclick="alert('Reboot signal sent to node.')">
+                <span>🔄 Reboot Node</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: Admin Panel Modal -->
+  <div id="modal-admin-panel" class="modal-backdrop hidden">
+    <div class="modal-content modal-xl">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2>⚙️ Cluster Management & Telemetry Admin Panel</h2>
+          <p class="modal-subtitle">Add/edit PC nodes, configure per-PC alert thresholds, change zones, and monitor connected telemetry agents.</p>
+        </div>
+        <button class="btn-close-modal" id="btn-close-admin">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="admin-tabs">
+          <button id="admin-tab-pcs-btn" class="admin-tab-btn active">🖥️ Cluster PC Nodes</button>
+          <button id="admin-tab-agents-btn" class="admin-tab-btn">📡 Connected Telemetry Agents</button>
+        </div>
+
+        <!-- TAB 1: PC Nodes -->
+        <div id="admin-tab-pcs" class="admin-tab-content active">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <span style="color:#94a3b8; font-size:0.85rem;">Manage cluster layout, specs, zones, and thermal safety limits.</span>
+            <button id="btn-admin-add-pc" class="btn-primary-finder" style="padding:0.4rem 0.9rem; font-size:0.85rem;">➕ Add New PC</button>
+          </div>
+
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>PC ID</th>
+                  <th>Name</th>
+                  <th>Zone</th>
+                  <th>GPU Model</th>
+                  <th>VRAM</th>
+                  <th>RAM</th>
+                  <th>Temp Threshold</th>
+                  <th>Agent UUID</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-pcs-tbody">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 2: Telemetry Agents -->
+        <div id="admin-tab-agents" class="admin-tab-content">
+          <div style="margin-bottom:1rem; color:#94a3b8; font-size:0.85rem;">
+            Live telemetry agents connected across the lab network. Remote agents auto-register on ping using persistent UUIDs.
+          </div>
+
+          <div class="admin-table-wrapper">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Agent UUID</th>
+                  <th>Target PC</th>
+                  <th>Client IP</th>
+                  <th>GPU Spec / Metrics</th>
+                  <th>Last Ping</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="admin-agents-tbody">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: Add / Edit PC Form Modal -->
+  <div id="modal-admin-pc-form" class="modal-backdrop hidden" style="z-index: 1100;">
+    <div class="modal-content modal-md">
+      <div class="modal-header">
+        <h2 id="admin-pc-form-title">➕ Add New PC Node</h2>
+        <button class="btn-close-modal" id="btn-close-pc-form">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="admin-pc-form">
+          <div class="admin-form-grid">
+            <div class="form-group">
+              <label>PC ID (Unique Key)</label>
+              <input type="text" id="input-pc-id" class="form-input" placeholder="e.g. PC-17" required>
+            </div>
+            <div class="form-group">
+              <label>PC Display Name</label>
+              <input type="text" id="input-pc-name" class="form-input" placeholder="e.g. PC-17 (Inference Server)" required>
+            </div>
+
+            <div class="form-group">
+              <label>Zone Assignment</label>
+              <select id="input-pc-zone" class="form-select" required>
+                <option value="Zone A (Training Cluster)">Zone A (Training Cluster)</option>
+                <option value="Zone B (Inference Racks)">Zone B (Inference Racks)</option>
+                <option value="Zone C (Student Workstations)">Zone C (Student Workstations)</option>
+                <option value="Zone D (Edge AI Nodes)">Zone D (Edge AI Nodes)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Location / Rack</label>
+              <input type="text" id="input-pc-location" class="form-input" placeholder="e.g. Row 3 - Rack 01">
+            </div>
+
+            <div class="form-group full-width">
+              <label>GPU Hardware Spec</label>
+              <input type="text" id="input-pc-gpu" class="form-input" placeholder="e.g. NVIDIA RTX 4090 24GB" required>
+            </div>
+
+            <div class="form-group">
+              <label>VRAM Total (GB)</label>
+              <input type="number" step="0.1" id="input-pc-vram" class="form-input" placeholder="24.0" required>
+            </div>
+
+            <div class="form-group">
+              <label>RAM Total (GB)</label>
+              <input type="number" step="0.1" id="input-pc-ram" class="form-input" placeholder="64.0" required>
+            </div>
+
+            <div class="form-group full-width">
+              <label>Thermal Alert Threshold (°C)</label>
+              <input type="number" id="input-temp-threshold" class="form-input" placeholder="85" value="85" required>
+            </div>
+          </div>
+
+          <div class="admin-form-actions">
+            <button type="button" id="btn-cancel-pc-form" class="btn-action-sm" style="background:#64748b; color:#fff; padding:0.5rem 1rem;">Cancel</button>
+            <button type="submit" class="btn-primary-finder" style="padding:0.5rem 1.2rem;">Save Configuration</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Drawer Panel -->
+  <div id="notif-drawer" class="notif-drawer hidden">
+    <div class="drawer-header">
+      <h3>🔔 Live Notifications</h3>
+      <button class="btn-close-drawer" id="btn-close-notif">&times;</button>
+    </div>
+    <div id="notif-list" class="notif-list">
+      <!-- Notifications inserted here -->
+    </div>
+  </div>
+
+  <!-- Floating Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="/static/js/notifications.js"></script>
+  <script src="/static/js/inspector.js"></script>
+  <script src="/static/js/finder.js"></script>
+  <script src="/static/js/floor_map.js"></script>
+  <script src="/static/js/analytics.js"></script>
+  <script src="/static/js/admin.js"></script>
+  <script src="/static/js/app.js"></script>
+
+</body>
+</html>
