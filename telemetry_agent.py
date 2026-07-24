@@ -195,7 +195,7 @@ def get_full_host_telemetry():
         "is_host": True
     }
 
-def run_agent_loop(server_url, pc_id=None, interval=2):
+def run_agent_loop(server_url, pc_id=None, interval=2, zone="Zone A (Training Cluster)"):
     agent_uuid = get_or_create_agent_uuid()
     hostname = os.environ.get("COMPUTERNAME", os.uname().nodename if hasattr(os, "uname") else "Agent-Node")
     target_id = pc_id if pc_id else hostname
@@ -213,6 +213,7 @@ def run_agent_loop(server_url, pc_id=None, interval=2):
             telemetry["id"] = target_id
             telemetry["name"] = target_id
             telemetry["uuid"] = agent_uuid
+            telemetry["zone"] = zone
             
             data = json.dumps(telemetry).encode('utf-8')
             req = urllib.request.Request(endpoint, data=data, headers={'Content-Type': 'application/json'})
@@ -228,7 +229,8 @@ if __name__ == "__main__":
     parser.add_argument("--server", type=str, default="http://127.0.0.1:8000", help="Master monitoring server URL")
     parser.add_argument("--pc-id", type=str, default=None, help="Assigned PC ID (e.g. PC-02)")
     parser.add_argument("--interval", type=int, default=2, help="Report interval in seconds")
+    parser.add_argument("--zone", type=str, default="Zone A (Training Cluster)", help="Assigned Zone")
     args = parser.parse_args()
 
-    run_agent_loop(args.server, args.pc_id, args.interval)
+    run_agent_loop(args.server, args.pc_id, args.interval, args.zone)
 
